@@ -11,15 +11,28 @@
     <div class="d-flex col-md-4 col-sm-12 flex-column justify-content-center ">
       <img class="img-fluid movie-poster shadow-sm" src="{% if movie.poster_path != None %}https://image.tmdb.org/t/p/w500{{movie.poster_path}}{% else %}https://placehold.co/600x900?text={{movie.name}} {% endif %}" alt="{{ movie.name }}" />
         <div class="my-3 d-flex flex-row justify-content-around">
-          <a name="watched" data-id="{{ movie.id }}" href="#" class="watch">
+          {% if user.is_authenticated %}
+          <a name="watched" data-id="{{ movie.id }}" href="#" class="watch" title="Добавить в просмотренное">
             <i class="bi bi-patch-check{% if is_watched %}-fill{% endif %}"></i>
           </a>
-          <button type="button" class="journal" data-bs-toggle="modal" data-bs-target="#modaljournal">
+          <button type="button" class="journal" data-bs-toggle="modal" data-bs-target="#modaljournal"  title="Добавить в журнал">
             <i class="bi bi-calendar-plus" style="color: $primary;"></i>
           </button>
-          <a name="fav" data-id="{{ movie.id }}" href="#" class="like">
+          <a name="fav" data-id="{{ movie.id }}" href="#" class="like" title="Добавить в избранное">
             <i class="bi bi-heart{% if is_liked %}-fill{% endif %}"></i>
           </a>
+          {% else %}
+          <a name="watched" data-id="{{ movie.id }}" href="{% url 'login' %}" class="not-loggedin" title="Добавить в просмотренное">
+            <i class="bi bi-patch-check{% if is_watched %}-fill{% endif %}"></i>
+          </a>
+          <a class="not-loggedin" href="{% url 'login' %}" title="Добавить в журнал">
+            <i class="bi bi-calendar-plus" style="color: $primary;"></i>
+          </a>
+          <a name="fav" data-id="{{ movie.id }}" href="{% url 'login' %}" class="not-loggedin" title="Добавить в избранное">
+            <i class="bi bi-heart{% if is_liked %}-fill{% endif %}"></i>
+          </a>
+          {% endif %}
+          
         </div>
     </div>
     <div class="col-md-8 col-sm-12 movie-data ps-md-3 ps-sm-0" aria-label="movie-data">
@@ -75,17 +88,18 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
         </div>
         <div class="modal-body">
-          <form action="{% url 'addtojournal' id=movie.id %}" method="post">
+          <form action="{% url 'addtojournal' id=movie.id %}" id="formJournal" method="post">
             {% csrf_token %}
             <input type="date" name="date" max="{{max_date}}" min="{{movie.release_date}}" id="watchedDate" required/>
             <div class="invalid-feedback">
               Пожалуйста, введите логин.
             </div>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-            <button type="submit" class="btn btn-primary">Добавить</button>
           </form>
         </div>
-        <div class="modal-footer"></div>
+        <div class="modal-footer">
+          <button form="formJournal" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            <button form="formJournal" type="submit" class="btn btn-primary">Добавить</button>
+        </div>
       </div>
     </div>
   </div>

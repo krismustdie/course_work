@@ -232,7 +232,10 @@ def stats(request, timespan):
             user=request.user, watched_at__isnull=False)
         date = WatchedMovie.objects.filter(user=request.user, watched_at__isnull=False).aggregate(
             Min("watched_at"))['watched_at__min']
-        start = datetime.combine(date, time())
+        try:
+            start = datetime.combine(date, time())
+        except:
+            start = datetime.today()
     if len(results) <1:
         return render(request, 'profile/stats.html', {"message": "Нет"})
     # calculating the watchtime stats
