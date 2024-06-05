@@ -1,0 +1,15 @@
+{% extends 'profile/profile.html' %}
+{% load filters %}
+{% block title %}
+  Любимые {{ user.get_username }}
+{% endblock %}
+{% block content %}
+<div class="d-flex flex-row flex-wrap  justify-content-center">
+    {% for movie in liked %}
+      <div class="col-md-2 col-sm-4 p-2">
+        {% include 'movie_card.html' with movie=movie %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

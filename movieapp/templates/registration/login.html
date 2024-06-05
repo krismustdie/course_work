@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Авторизация
+{% endblock %}
+
+{% block main %}
+  {% if form.errors %}
+    <p>Неправильный логин или пароль. Проверьте правильность введённых данных и попробуйте ещё раз.</p>
+  {% endif %}
+
+  <form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    <div class="form-floating">
+      <input type="text" class="form-control" id="username" name="username" required/>
+      <label for="floatingInput">Логин</label>
+      <div class="invalid-feedback">
+        Пожалуйста, введите логин.
+      </div>
+    </div>
+    <div class="form-floating">
+      <input type="password" class="form-control" name="password" id="password" required/>
+      <label for="floatingInput">Пароль</label>
+      <div class="invalid-feedback">
+        Пожалуйста, введите пароль.
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <button type="submit" class="btn btn-primary">Login</button>
+      </div>
+    </div>
+  </form>
+{% endblock %}

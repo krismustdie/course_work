@@ -1,0 +1,7 @@
+{% load filters %}
+<a href="{% url 'movie' movie.tmdb_id %}" class="card" id="{{movie.tmdb_id}}">
+        <img src="{% if movie.poster_path != None %}https://image.tmdb.org/t/p/w300{{movie.poster_path}}{% else %}https://placehold.co/300x450?text={{movie.title}}{% endif %}" class="card-img" alt="{{movie.title}}">
+        <span class="rating-badge translate-middle badge rounded-pill bg-{{movie.rating|rating_color}}">
+            {{movie.rating|roundrating}}
+        </span>
+ </a>

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}
+Главная
+{% endblock %}
+
+{% block main %}
+{% if new_user %}
+<p>Hello, {{new_user.username}}</p>
+{% endif %}
+
+<h1 class="mt-3">Популярное</h1>
+
+    <swiper-container class="mySwiper myScroll" autoplay='true' scrollbar="false" direction="horizontal" slides-per-view="auto"
+        free-mode="true" mousewheel="true" hide="true">
+        {% for movie in popular%}
+        <swiper-slide class="col-md-2 col-sm-4" id="{{movie.id}}">
+            {% include "movie_card.html" with movie=movie%}
+        </swiper-slide>
+        {% endfor %}
+    </swiper-container>
+
+<h1 class="mt-3">Лучшие фильмы в жанре {{random_genre}}</h1>
+    <swiper-container class="mySwiper myScroll" autoplay='true' scrollbar="false" direction="horizontal" slides-per-view="auto"
+        free-mode="true" mousewheel="true" hide="true">
+        {% for movie in randoms%}
+        <swiper-slide class="col-md-2 col-sm-4" id="{{movie.id}}">
+            {% include "movie_card.html" with movie=movie%}
+        </swiper-slide>
+        {% endfor %}
+    </swiper-container>
+
+<h1 class="mt-3">Скоро в прокате</h1>
+    <swiper-container class="mySwiper myScroll" autoplay='true' scrollbar="false" direction="horizontal" slides-per-view="auto"
+        free-mode="true" mousewheel="true" hide="true">
+        {% for movie in soon%}
+        <swiper-slide class="col-md-2 col-sm-4" id="{{movie.id}}">
+            {% include "movie_card.html" with movie=movie%}
+        </swiper-slide>
+        {% endfor %}
+    </swiper-container>
+</div>
+{% endblock %}

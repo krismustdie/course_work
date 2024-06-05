@@ -1,0 +1,38 @@
+{% extends 'profile/profile.html' %}
+{% load filters %}
+
+{% block title %}
+  Статистика {{ user.get_username }}
+{% endblock %}
+{% block content %}
+<div class="my-3">
+  <a href="{% url 'stats' 'month' %}" type="button" class="btn btn{% if not 'month' in request.path %}-outline{% endif %}-primary">За месяц</a>
+  <a href="{% url 'stats' 'halfyear' %}" type="button" class="btn btn{% if not 'halfyear' in request.path %}-outline{% endif %}-primary">За полгода</a>
+  <a href="{% url 'stats' 'year' %}" type="button" class="btn btn{% if not '/year' in request.path %}-outline{% endif %}-primary">За год</a>
+  <a href="{% url 'stats' 'alltime' %}" type="button" class="btn btn{% if not 'alltime' in request.path %}-outline{% endif %}-primary">За всё время</a>
+</div>
+{% if message %}
+Ничего не найдено
+{% else %}
+<div class="d-flex align-items-center flex-column mt-3">
+  <div class="container-fluid d-flex flex-row flex-wrap justify-content-around">
+    <h3 class="stats-numbers">{{total_time}}<br><p class="stats-numbers">минут просмотренно</p></h3>
+    <h3 class="stats-numbers">{{total_time|tohours}}<br><p class="stats-numbers">часов просмотренно</p></h3>
+    <h3 class="stats-numbers">{{total_count}}<br><p class="stats-numbers">всего фильмов</p></h3>
+    <h3 class="stats-numbers">{{total_genres}}<br><p class="stats-numbers">различных жанров</p></h3>  
+  </div>
+  <div class="d-flex flex-lg-row flex-column">
+    <div class="chart col mt-3">
+      <h2 class="bold">Время за просмотром</h2>
+        {{ bar_graph|safe }}
+    </div>
+    <div class="chart col mt-3">
+      <h2 class="bold">Распределение по жанрам</h2>
+      {{ piechart|safe }}
+    </div>
+
+  </div>
+</div>
+{% endif %}
+  
+{% endblock %}

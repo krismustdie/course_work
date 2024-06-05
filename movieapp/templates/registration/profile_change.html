@@ -1,0 +1,13 @@
+{% extends "profile/profile.html" %}
+
+{% block title %}
+Сменить пароль
+{% endblock %}
+
+{% block content %}
+<form method="post">
+  {% csrf_token %}
+  {{ user_form.as_p }}
+  <button class="btn btn-primary" type="submit">Отправить</button>
+</form>
+{% endblock %}

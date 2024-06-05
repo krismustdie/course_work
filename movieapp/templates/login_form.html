@@ -1,0 +1,22 @@
+<div class="dropdown">
+  <button type="button" class="menu btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+    <i class="bi bi-person-fill"></i>
+  </button>
+  <form class="dropdown-menu p-4" method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    <div class="form-floating gap-1">
+      <input type="text" class="form-control" id="username" name="username" required />
+      <label for="floatingInput">Логин</label>
+      <div class="invalid-feedback">Пожалуйста, введите логин.</div>
+    </div>
+    <div class="form-floating">
+      <input type="password" class="form-control" name="password" id="password" required />
+      <label for="floatingInput">Пароль</label>
+      <div class="invalid-feedback">Пожалуйста, введите пароль.</div>
+    </div>
+    <button type="submit" class="btn btn-primary">Войти</button>
+    <div class="dropdown-divider"></div>
+    <a class="dropdown-item" href="{% url 'password_reset' %}">Забыли пароль?</a>
+    <a class="dropdown-item" href="{% url "registration" %}">Зарегистрироваться</a>
+  </form>
+</div>

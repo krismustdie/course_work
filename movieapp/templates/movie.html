@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load filters %}
+
+{% block title %}
+  {{ movie.title }} ({{ movie.release_date|cut }})
+{% endblock %}
+
+
+{% block main %}
+  <div class="d-flex flex-md-row flex-sm-column flex-wrap justify-content-center align-items-center" id="movieInfo">
+    <div class="d-flex col-md-4 col-sm-12 flex-column justify-content-center ">
+      <img class="img-fluid movie-poster shadow-sm" src="{% if movie.poster_path != None %}https://image.tmdb.org/t/p/w500{{movie.poster_path}}{% else %}https://placehold.co/600x900?text={{movie.name}} {% endif %}" alt="{{ movie.name }}" />
+        <div class="my-3 d-flex flex-row justify-content-around">
+          <a name="watched" data-id="{{ movie.id }}" href="#" class="watch">
+            <i class="bi bi-patch-check{% if is_watched %}-fill{% endif %}"></i>
+          </a>
+          <button type="button" class="journal" data-bs-toggle="modal" data-bs-target="#modaljournal">
+            <i class="bi bi-calendar-plus" style="color: $primary;"></i>
+          </button>
+          <a name="fav" data-id="{{ movie.id }}" href="#" class="like">
+            <i class="bi bi-heart{% if is_liked %}-fill{% endif %}"></i>
+          </a>
+        </div>
+    </div>
+    <div class="col-md-8 col-sm-12 movie-data ps-md-3 ps-sm-0" aria-label="movie-data">
+      <h1 name="title bold">{{ movie.title }} <small class="text-body-secondary">{{ movie.release_date|format_date }}</small></h1>
+      <p>{{ movie.runtime|time }}</p>
+      <h3>{{ movie.tagline }}</h3>
+      <p>{{ movie.overview }}</p>
+      <h3>Жанры</h3>
+      <p>{{ genres }}</p>
+    </div>
+  </div>
+  <div class="d-flex flex-row flex-wrap col-12 justify-content-around" aria-label="credits">
+    {% for person in cast %}
+      <div class="person d-flex flex-column align-items-center">
+        <img src="https://image.tmdb.org/t/p/w500{{ person.profile_path }}" class="credits-photo" alt="..." />
+        <h5 class="text-center" width="100%">{{ person.name|nameline|linebreaksbr }}</h5>
+        <small class="text-body-secondary text-center">{{ person.character }}</small>
+      </div>
+    {% endfor %}
+    {% if director %}
+      <div class="person d-flex flex-column align-items-center">
+        <img src="https://image.tmdb.org/t/p/w500{{ director.profile_path }}" class="credits-photo" alt="..." />
+        <h5 class="text-center">{{ director.name|nameline|linebreaksbr }}</h5>
+        <small class="text-body-secondary text-center">режиссёр</small>
+      </div>
+    {% endif %}
+    {% if producer %}
+      <div class="person d-flex flex-column align-items-center">
+        <img src="https://image.tmdb.org/t/p/w500{{ producer.profile_path }}" class="credits-photo" alt="..." />
+        <h5 class="text-center">{{ producer.name|nameline|linebreaksbr }}</h5>
+        <small class="text-body-secondary text-center">продюсер</small>
+      </div>
+    {% endif %}
+  </div>
+  <div aria-label="recommendations">
+    <h1 class="journaldivider text-center">Похожее</h1>
+    <div class="d-flex flex-wrap flex-row  justify-content-center">
+      {% for rec in recs %}
+        <div class="col-md-2 col-sm-4 p-2">
+          {% include 'movie_card.html' with movie=rec %}
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+
+  <!-- Modal -->  
+  <div class="modal fade" id="modaljournal" tabindex="-1" aria-labelledby="journalModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="journalModal">Добавить в дневник</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body">
+          <form action="{% url 'addtojournal' id=movie.id %}" method="post">
+            {% csrf_token %}
+            <input type="date" name="date" max="{{max_date}}" min="{{movie.release_date}}" id="watchedDate" required/>
+            <div class="invalid-feedback">
+              Пожалуйста, введите логин.
+            </div>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            <button type="submit" class="btn btn-primary">Добавить</button>
+          </form>
+        </div>
+        <div class="modal-footer"></div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block domready %}
+  const url_like = '{% url 'addtofav' %}';
+  var options = {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrftoken },
+      mode: 'same-origin'
+  }
+  var likeButton = document.querySelector('a.like')
+  var watchButton = document.querySelector('a.watch')
+  likeButton.addEventListener('click', function (e) {
+          e.preventDefault();
+          var formData = new FormData();
+          formData.append('id', likeButton.dataset.id);
+          options['body'] = formData;
+  
+          fetch(url_like, options)
+              .then(response => response.json())
+              .then(data => {
+                  if (data['status'] === 'ok') {
+                    if (likeButton.children[0].classList.contains("bi-heart") && watchButton.children[0].classList.contains("bi-patch-check")){
+                      watchButton.children[0].classList.toggle("bi-patch-check");
+                      watchButton.children[0].classList.toggle("bi-patch-check-fill");
+                    }
+                    likeButton.children[0].classList.toggle("bi-heart");
+                    likeButton.children[0].classList.toggle("bi-heart-fill");
+                    
+                  }
+              })
+      });
+  const url_wacthed = '{% url 'addtowatched' %}';
+  watchButton.addEventListener('click', function (e) {
+          e.preventDefault();
+          var watchButton = this;
+          var formData = new FormData();
+          formData.append('id', watchButton.dataset.id);
+          options['body'] = formData;
+  
+          fetch(url_wacthed, options)
+              .then(response => response.json())
+              .then(data => {
+                  if (data['status'] === 'ok') {
+                    if (likeButton.children[0].classList.contains("bi-heart-fill") && watchButton.children[0].classList.contains("bi-patch-check-fill")){
+                      likeButton.children[0].classList.toggle("bi-heart");
+                      likeButton.children[0].classList.toggle("bi-heart-fill");
+                    }
+                    watchButton.children[0].classList.toggle("bi-patch-check");
+                    watchButton.children[0].classList.toggle("bi-patch-check-fill");
+                    
+                  }
+              })
+      });
+
+{% endblock %}

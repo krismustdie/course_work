@@ -1,0 +1,20 @@
+{% extends 'profile/profile.html' %}
+{% load filters %}
+
+{% block title %}
+  Журнал {{ user.get_username }}
+{% endblock %}
+
+{% block content %}
+  {% for key, value in journal.items %}
+      <h2 class="journaldivider col-12 p-1 my-2 text-center">{{ key|month }}</h2>
+    <div class="d-flex flex-row flex-wrap">
+      {% for entry in value %}
+        <div class="col-md-2 col-sm-4 p-2">
+          {% include 'movie_card.html' with movie=entry.movie %}
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+  
+{% endblock %}
