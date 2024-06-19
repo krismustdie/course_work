@@ -146,26 +146,33 @@ def movie(request, id):
 from django.contrib.auth.decorators import login_required
 @login_required
 def addtofav(request):
-    movie_id = request.POST.get('id')
-    movie = Movie.objects.get(pk=int(movie_id))
-    if movie.users_like.contains(request.user):
-        movie.users_like.remove(request.user)
-    else:
-        movie.users_like.add(request.user)
-        if not movie.users_watched.contains(request.user):
-            movie.users_watched.add(request.user)
-    return JsonResponse({'status': 'ok'})
+    try:
+        movie_id = request.POST.get('id')
+        movie = Movie.objects.get(pk=int(movie_id))
+        if movie.users_like.contains(request.user):
+            movie.users_like.remove(request.user)
+        else:
+            movie.users_like.add(request.user)
+            if not movie.users_watched.contains(request.user):
+                movie.users_watched.add(request.user)
+        return JsonResponse({'status': 'ok'})
+    except:
+        return JsonResponse({'status': 'error'})
 
 @login_required
 def addtowatched(request):
-    movie_id = request.POST.get('id')
-    movie = Movie.objects.get(pk=int(movie_id))
-    if movie.users_watched.contains(request.user):
-        movie.users_like.remove(request.user)
-        movie.users_watched.remove(request.user)
-    else:
-        movie.users_watched.add(request.user)
-    return JsonResponse({'status': 'ok'})
+    try:
+        movie_id = request.POST.get('id')
+        movie = Movie.objects.get(pk=int(movie_id))
+        if movie.users_watched.contains(request.user):
+            movie.users_like.remove(request.user)
+            movie.users_watched.remove(request.user)
+        else:
+            movie.users_watched.add(request.user)
+        return JsonResponse({'status': 'ok'})
+    except:
+        return JsonResponse({'status': 'error'})
+    
 
 @login_required
 def addtojournal(request, id):
@@ -192,7 +199,7 @@ def liked(request):
 
 def journal(request):
     movies = WatchedMovie.objects.select_related('movie').filter(
-        user=request.user, watched_at__isnull=False)
+        user=request.user, watched_at__isnull=False).order_by('-watched_at')
     time = movies.annotate(year=ExtractYear('watched_at'), month=ExtractMonth(
         'watched_at')).values("year", "month")
     journal_bymonth = {}
