@@ -1,6 +1,9 @@
 {% load filters %}
-<a href="{% url 'movie' movie.tmdb_id %}" class="card" id="{{movie.tmdb_id}}">
-        <img src="{% if movie.poster_path != None %}https://image.tmdb.org/t/p/w300{{movie.poster_path}}{% else %}https://placehold.co/300x450?text={{movie.title}}{% endif %}" class="card-img" alt="{{movie.title}}">
+
+<a href="{% url movie.is_Series|m_type movie.tmdb_id %}" class="card" id="{{movie.tmdb_id}}">
+        <img data-fallback="https://placehold.co/600x900?text=" onerror="handleImageError(this)" src="https://image.tmdb.org/t/p/w300{{movie.poster_path}}" class="card-img" alt="{{movie.title}}">
+        {% comment %} <img src="https://placehold.co/600x900?text={{movie.title}}" class="card-img" alt="{{movie.title}}"> {% endcomment %}
+        
         <span class="rating-badge translate-middle badge rounded-pill bg-{{movie.rating|rating_color}}">
             {{movie.rating|roundrating}}
         </span>

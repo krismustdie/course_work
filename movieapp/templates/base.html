@@ -11,14 +11,29 @@
     border: none;
   }
   
-  .credits-photo {
-    object-fit: cover;
-    width: 100px;
-    height: 100px;
-    border-radius: 100%;
-    background-color: #333333;
-  }
 </style>
+
+<style>
+        .word-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .word {
+            padding: 5px 10px;
+            border-radius: 15px;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        .word:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+    </style>
 
 <html lang="en">
   <head>
@@ -27,8 +42,8 @@
     <link rel="icon" href="{% static 'favico.ico' %}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>  
-    <link href="https://fonts.googleapis.com/css2?family=Play:wght@400;700&family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap" rel="stylesheet">
 
     <!-- added cdn -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-element-bundle.min.js"></script>

@@ -9,7 +9,8 @@ def cut(value:str):
     return value[0:4]
 
 @register.filter
-def time(value:str): 
+def time(value:int): 
+    value = int(value)
     days = value//60//24
     hours = value//60%24
     minutes = value%60
@@ -26,18 +27,27 @@ def month(value:str):
 
 @register.filter
 def format_date(value:str):
-    year = value.split("-")[0]
-    month = value.split("-")[1]
-    day = value.split("-")[2]
+    value = value.split("-")
+    year = value[0]
+    month = value[1]
+    day = value[2]
     return f"{day}.{month}.{year}"
 
 @register.filter
-def nameline(value:str):
-    return value.replace(" ", "\n")
+def year(value:str):
+    return value.split("-")[0]
 
 @register.filter
-def tohours(value:int):
-    return value//60
+def m_type(value:bool):
+    return "tv" if value else "movie"
+
+@register.filter
+def link(value:str):
+    return value.replace(" ", "%20")
+
+@register.filter
+def tohours(value):
+    return int(value)//60
 
 @register.filter
 def rating_color(value:int):
@@ -48,3 +58,12 @@ def rating_color(value:int):
     if float(value)>=7:
         return "success"
     return "warning"
+
+@register.filter
+def genres_count(value:str):
+    return len(set(value.split(',')))-1
+
+
+@register.filter
+def incline(value, arg):
+    return arg+str(value)

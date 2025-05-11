@@ -1,17 +1,9 @@
 //colors
 
-$primary: #655a7c;
-$white: #f9f7f0;
-$nav-link-color: $primary;
-$nav-link-hover-color: #6d4db1;
-$input-group-addon-bg: $white;
-$input-group-addon-border-color: #00000000;
-$input-group-addon-color: $primary;
-$input-border-color: $white;
-$nav-tabs-border-color: #ac92e5;
-$nav-tabs-border-width: 2px;
-$nav-tabs-link-active-border-color: $nav-tabs-border-color;
-$nav-tabs-link-hover-border-color: #c8b5f0;
+$white: #F6F6F3;
+$black: #0A100D;
+$primary: #B9BAA3;
+$secondary: #A5231D;
 @import "../../node_modules/bootstrap/scss/bootstrap";
 
 // for swiper
@@ -73,17 +65,17 @@ body {
 
 h1,
 h2 {
-    font-family: "Play", sans-serif;
-    font-weight: 400;
+    font-family: "Roboto Flex", sans-serif;
+    font-weight: 800;
     font-style: normal;
+}
+
+h1 {
+    text-decoration: underline wavy;
 }
 
 svg {
     width: 100%;
-}
-
-.bold {
-    font-weight: 600 !important;
 }
 
 .journaldivider {
@@ -123,13 +115,6 @@ svg {
     font-size: medium;
 }
 
-.journal {
-    display: block;
-    padding: none;
-    border: none;
-    background-color: #00000000;
-}
-
 .delete-button{
     border: none;
     width: min-content;
@@ -138,6 +123,15 @@ svg {
     z-index: 99;
     position: absolute;
 }
+
+.journal {
+    display: block;
+    padding: none;
+    border: none;
+    background-color: #00000000;
+}
+
+// stats page
 
 h3.stats-numbers {
     font-weight: 600;
@@ -151,4 +145,107 @@ p.stats-numbers {
     }
 
     color: #655a7c;
+}
+
+// movie info page
+
+.backdrop-container {
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50vh;
+    overflow: hidden;
+    place-content:top center;
+    display: grid;
+}
+
+.backdrop-image{
+    width: inherit;
+    height: auto;
+}
+
+.backdrop-container::before {
+    content: "";
+    display: block;
+    position: absolute;
+    width: inherit;
+    height: inherit;
+    background-image: linear-gradient(to right, #f9f7f0 10%, transparent 20%), linear-gradient(to left, #f9f7f0 10%, transparent 20%), linear-gradient(to top, #f9f7f0 10%, transparent 40%);
+}
+
+#movieInfo{
+    margin-top: 25vh;
+}
+
+.poster-container{
+    padding-right: 30px;
+}
+
+.credits-container{
+    padding-left: 30px;
+}
+
+.movie-title{
+    text-decoration: none;
+}
+
+.link::after{
+    transition: all 0.6s;
+    font-family: "bootstrap-icons";
+    display: inline-block;
+    content: "\F138";
+    vertical-align: middle;
+    padding-left: 3pt;
+}
+
+.link:hover::after{
+    font-family: "bootstrap-icons";
+    display: inline-block;
+    content: "\F138";
+    padding-left: 10pt;
+}
+
+.link{
+    color: $black;
+    text-decoration: none;
+}
+
+.info-card p{
+    margin-bottom: 0;
+}
+
+.info-card{
+    background-color: $white;
+    box-shadow: 0 0 17px $primary;
+    border-radius: 32px;
+    padding: 20pt;
+}
+
+.fit-content{
+    width: fit-content;
+}
+
+
+.fit-parent{
+    width: 100%;
+}
+
+.avatar{
+    display: flex;
+    min-width: 60px;
+    min-height: 60px;
+    max-width: 150px;
+    min-width: 150px;
+    aspect-ratio: 1 / 1;
+    border-radius: 1000px;
+    place-content: center;
+    overflow: hidden;
+}
+
+.mini-poster{
+    max-height: 200px;
+    width: auto;
+    border-radius: 28px;
 }

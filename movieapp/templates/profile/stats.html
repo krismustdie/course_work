@@ -1,10 +1,115 @@
-{% extends 'profile/profile.html' %}
+{% extends 'base.html' %}
 {% load filters %}
 
 {% block title %}
-  Статистика {{ user.get_username }}
+  Статистика {{ stats.username }}
 {% endblock %}
-{% block content %}
+
+{% block main %}
+
+<h1 class="row">Статистика {{ stats.username }}</h1>
+<div class="row">
+  <a href="{% url 'stats' stats.id %}?timespan=month" class="stats-link {% if timespan == 'month' %}fw-bold{% endif %}">4 недели</a>
+  <a href="{% url 'stats' stats.id %}?timespan=halfyear" class="stats-link {% if timespan == 'halfyear' %}fw-bold{% endif %}">6 месяцев</a>
+  <a href="{% url 'stats' stats.id %}?timespan=year" class="stats-link {% if timespan == 'year' %}fw-bold{% endif %}">12 месяцев</a>
+  <a href="{% url 'stats' stats.id %}?timespan=alltime" class="stats-link {% if timespan == 'alltime' %}fw-bold{% endif %}">всё время</a>
+</div>
+<div class="flex"> 
+  <h2 class="text-wrap m-0" id="totalHours_number"> {{stats.watchtime|tohours}} </h2>
+  <p class="text-wrap text-primary" id="totalHours_title"> {{stats.watchtime|incline:"час"}} </p>
+  
+  <h2 class="text-wrap m-0" id="totalMinutes_number"> {{stats.watchtime}} </h2>
+  <p class="text-wrap text-primary" id="totalMinutes_title"> {{stats.watchtime|incline:"минут"}} </p>
+
+  <h2 class="text-wrap m-0" id="totalMovies_number"> {{stats.movies_count}} </h2>
+  <p class="text-wrap text-primary" id="totalMovies_title"> {{stats.movies_count|incline:"фильм"}} </p>
+
+  <h2 class="text-wrap m-0" id="totalSeries_number"> {{stats.series_count}} </h2>
+  <p class="text-wrap text-primary" id="totalSeries_title"> {{stats.series_count|incline:"сериал"}} </p>
+
+  <h2 class="text-wrap m-0" id="totalEpisodes_number"> {{stats.episodes_count}} </h2>
+  <p class="text-wrap text-primary" id="totalEpisodes_title"> {{stats.episodes_count|incline:"сери"}} </p>
+  
+  <h2 class="text-wrap m-0" id="totalGenres_number"> {{stats.genre_counts|genres_count}} </h2>
+  <p class="text-wrap text-primary" id="totalGenres_title"> {{stats.genre_counts|genres_count|incline:"жанр"}} </p>
+
+  <h2 class="text-wrap m-0" id="totalDays_number"> {{stats.active_days}} </h2>
+  <p class="text-wrap text-primary" id="totalDays_title"> {{stats.active_days|incline:"день"}} активности </p>
+</div>
+<div class="row">
+  <div class="col"><h1>Любимые жанры</h1></div>
+  <div class="col"><h1>Просмотры по дням недели</h1></div>
+        {% comment %} <img src="data:image/png;base64,{{ wordcloud_image }}" 
+             alt="Облако жанров" 
+             class="img-fluid"> {% endcomment %}
+</div>
+{{stats}}
+{{url}}
+<h1>Облако жанров</h1>
+    <div id="wordCloud" class="word-cloud"></div>
+
+    <script>
+        // Словарь жанров
+        const __genres = {
+            28: "боевик", 12: "приключения", 16: "мультфильм", 35: "комедия", 
+            80: "криминал", 99: "документальный", 18: "драма", 
+            10751: "семейный", 14: "фэнтези", 36: "история", 27: "ужасы", 
+            10402: "музыка", 9648: "детектив", 10749: "мелодрама", 
+            878: "фантастика", 10770: "телевизионный фильм", 53: "триллер", 
+            10752: "военный", 37: "вестерн", 10759: "Боевик и Приключения", 
+            10762: "Детский", 10763: "Новости", 10764: "Реалити-шоу", 
+            10765: "НФ и Фэнтези", 10766: "Мыльная опера", 10767: "Ток-шоу", 
+            10768: "Война и Политика"
+        };
+
+        // Строка с ID жанров
+        const genreIdsString = "{{stats.genre_counts}}";
+        
+        // Функция для создания облака слов
+        function createWordCloud(idsString, genresMap) {
+            const wordCloud = document.getElementById('wordCloud');
+            
+            // Разбиваем строку на массив ID
+            const ids = idsString.split(',');
+            
+            // Считаем частоту каждого жанра
+            const frequency = {};
+            ids.forEach(id => {
+                frequency[id] = (frequency[id] || 0) + 1;
+            });
+            
+            // Создаем элементы для каждого жанра
+            for (const [id, count] of Object.entries(frequency)) {
+                const genreName = genresMap[id] || `Неизвестный жанр (${id})`;
+                
+                const wordElement = document.createElement('div');
+                wordElement.className = 'word';
+                wordElement.textContent = genreName;
+                
+                // Размер шрифта зависит от частоты
+                const fontSize = 14 + (count * 6);
+                wordElement.style.fontSize = `${fontSize}px`;
+                
+                // Случайный цвет
+                const hue = Math.floor(Math.random() * 360);
+                wordElement.style.backgroundColor = `hsla(${hue}, 70%, 80%, 0.7)`;
+                wordElement.style.color = `hsl(${hue}, 70%, 30%)`;
+                
+                wordCloud.appendChild(wordElement);
+            }
+        }
+        
+        // Создаем облако слов при загрузке страницы
+        window.onload = function() {
+            createWordCloud(genreIdsString, __genres);
+        };
+    </script>
+
+{% endblock main %}
+
+
+
+{% comment %} {% block content %}
 <div class="my-3">
   <a href="{% url 'stats' 'month' %}" type="button" class="btn btn{% if not 'month' in request.path %}-outline{% endif %}-primary">За месяц</a>
   <a href="{% url 'stats' 'halfyear' %}" type="button" class="btn btn{% if not 'halfyear' in request.path %}-outline{% endif %}-primary">За полгода</a>
@@ -35,4 +140,4 @@
 </div>
 {% endif %}
   
-{% endblock %}
+{% endblock %} {% endcomment %}

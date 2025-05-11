@@ -7,14 +7,21 @@
 
 {% block content %}
   {% for key, value in journal.items %}
-      <h2 class="journaldivider col-12 p-1 my-2 text-center">{{ key|month }}</h2>
-    <div class="d-flex flex-row flex-wrap">
+  <div class="bg-primary text-white">
+    <h3 class="text-uppercase col-12 p-1 my-4 text-center">{{ key|month }}</h3></div>
       {% for entry in value %}
-        <div class="col-md-2 col-sm-4 p-2">
-          {% include 'movie_card.html' with movie=entry.movie %}
+        <div class="row my-2 align-items-center text-center">
+          <p class="fs-1 col">{{entry.watched_at.day}}</p>
+          <img class="mini-poster" data-fallback="https://placehold.co/600x900?text=" onerror="handleImageError(this)" src="https://image.tmdb.org/t/p/w300{{entry.movie.poster_path}}" alt="{{movie.title}}">
+          <h4  class="col-4 fw-bold text-start" >
+            <a href="{% url 'movie' entry.movie.tmdb_id %}" class="text-black text-decoration-none">{{entry.movie.title}}</a>
+          </h4>
+          <h4 class="col">{{entry.movie.release_date.year}}</h4> 
+          <p class="col-3">rating</p> 
+          <a class="col" href="#"><i class="bi bi-pencil-square"></i></a>
+          <a class="col" href="#"><i class="bi bi-trash"></i></a>
         </div>
       {% endfor %}
-    </div>
   {% endfor %}
   
 {% endblock %}

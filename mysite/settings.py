@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'django.contrib.staticfiles',
     'movieapp.apps.MovieappConfig',
+    'api.apps.ApiConfig',
+    'rest_framework',
     'sass_processor',
     'mathfilters',
 ]
@@ -153,3 +155,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = '/movieapp'
 LOGOUT_REDIRECT_URL = '/movieapp'
 LANGUAGE_CODE = 'ru-RU'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

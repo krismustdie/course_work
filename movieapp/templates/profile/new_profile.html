@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load filters %}
+{% load mathfilters %}
+{% load static %}
+{% block title %}
+Профиль {{ user_profile.user.get_username }}
+{% endblock %}
+{% block main %}
+  <div class="d-flex flex-row col-12 align-items-center">
+    <div class="col-md-6 col-sm-12 row ps-5 pe-3 align-items-center">
+
+        <div class="col avatar p-0">
+          {% if user_profile.avatar %}
+          <img src="{{user_profile.avatar.url}}" alt="">
+          {% else %}
+          <img src="https://sun3-11.userapi.com/impg/YJmLI4wNIHbFkCTUg_S6uCcZ0JHe3r7ln3L08w/AvZygOJ6dWo.jpg?size=1374x2160&quality=95&sign=6fd17a380f12ee1b3cc06c838042361c&type=album" alt="">
+          {% endif %}
+        </div>
+        <div class="col ps-5">
+          <h2 class="row">{{ user_profile.user.get_username }}</h2>
+          <div class="row">
+            {% if request.user.id == user_profile.user.id %}
+            <a class="ps-0" href="{% url 'editprofile' %}">Редактировать профиль</a>
+            <a class="ps-0" href="{% url 'editpass' %}">Сменить пароль</a>
+            {% endif %}
+          </div>
+        </div>
+    
+        
+    </div>
+    <div class="col-md-6 col-sm-12 stats-container pe-5 ps-3">
+      <div class="info-card align-items-center">
+        <div class="row mb-3" id="stats-header">
+          <h2 class="col m-0 fit-content"><a id="stats-link" href="{% url 'stats' user_profile.user.id %}?timespan=month" class="link">Статистика</a></h2>
+          <div class="dropdown col">
+            <button class="btn btn-primary dropdown-toggle fit-parent" type="button" id="stats-selector" data-timespan="month" data-bs-toggle="dropdown" aria-expanded="false">4 недели</button>
+            <ul class="dropdown-menu">
+              <li>
+                <a class="dropdown-item" data-timespan="month" href="#">4 недели</a>
+              </li>
+              <li>
+                <a class="dropdown-item" data-timespan="halfyear" href="#">6 месяцев</a>
+              </li>
+              <li>
+                <a class="dropdown-item" data-timespan="year" href="#">12 месяцев</a>
+              </li>
+              <li>
+                <a class="dropdown-item" data-timespan="alltime" href="#">всё время</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="row text-center">
+          <div class="col">
+            <h2 class="text-wrap m-0" id="totalHours_number">
+              <span class="placeholder col-2 bg-primary"></span>
+            </h2>
+            <p class="text-wrap text-primary" id="totalHours_title">
+              <span class="placeholder col-2 bg-primary"></span>
+            </p>
+          </div>
+          <div class="col">
+            <h2 class="text-wrap m-0" id="totalMovies_number">
+              <span class="placeholder col-2 bg-primary"></span>
+            </h2>
+            <p class="text-wrap text-primary" id="totalMovies_title">
+              <span class="placeholder col-2 bg-primary"></span>
+            </p>
+          </div>
+          <div class="col ">
+            <h2 class="text-wrap m-0" id="totalSeries_number">
+              <span class="placeholder col-2 bg-primary"></span>
+            </h2>
+            <p class="text-wrap text-primary" id="totalSeries_title">
+              <span class="placeholder col-2 bg-primary"></span>
+            </p>
+          </div>
+          <div class="col">
+            <h2 class="text-wrap m-0" id="totalGenres_number">
+              <span class="placeholder col-2 bg-primary"></span>
+            </h2>
+            <p class="text-wrap text-primary" id="totalGenres_title">
+              <span class="placeholder col-2 bg-primary"></span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<script>const link = `/api/user/{{user_profile.user.id}}/stats/?timespan=`;
+  const stats_link = `/movieapp/profile/{{user_profile.user.id}}/stats/?timespan=`;
+</script>
+  <script src={% static 'js/load_stats.js' %}></script>
+
+  <h1 class="mt-3"><a class="link" href="{% url 'liked' %}">Любимое</a></h1>
+  <swiper-container class="mySwiper myScroll" autoplay="true" scrollbar="false" direction="horizontal" slides-per-view="auto" free-mode="true" mousewheel="true" hide="true">
+    {% for movie in liked %}
+      <swiper-slide class="col-md-2 col-sm-4" id="{{ movie.id }}">
+        {% include 'movie_card.html' with movie=movie %}
+      </swiper-slide>
+    {% endfor %}
+  </swiper-container>
+
+  <h1 class="mt-3"><a class="link" href="{% url 'watched' %}">Просмотренное</a></h1>
+  <swiper-container class="mySwiper myScroll" autoplay="true" scrollbar="false" direction="horizontal" slides-per-view="auto" free-mode="true" mousewheel="true" hide="true">
+    {% for movie in watched %}
+      <swiper-slide class="col-md-2 col-sm-4" id="{{ movie.id }}">
+        {% include 'movie_card.html' with movie=movie%}
+      </swiper-slide>
+    {% endfor %}
+  </swiper-container>
+{% endblock %}

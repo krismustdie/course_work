@@ -1,48 +1,45 @@
-from io import StringIO
-import matplotlib.pyplot as plt
+from django.conf import settings
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from django.db.models import Count, Min, Sum
 from django.db.models.functions import ExtractYear, ExtractMonth
 import requests
-from random import choice
-from .forms import SignUpForm
-from .models import Movie, WatchedMovie
+from .forms import ProfileEditForm, SignUpForm
+from .models import Movie, Profile, WatchedMovie
 from datetime import *
 import os
 from dotenv import load_dotenv
+import matplotlib.colors as mcolors
+import numpy as np
 
 load_dotenv()
-__genres = {28: "боевик", 12: "приключения", 16: "мультфильм", 35: "комедия", 80: "криминал", 99: "документальный", 18: "драма", 10751: "семейный", 14: "фэнтези", 36: "история",
-            27: "ужасы", 10402: "музыка", 9648: "детектив", 10749: "мелодрама", 878: "фантастика", 10770: "телевизионный фильм", 53: "триллер", 10752: "военный", 37: "вестерн"}
+__genres = {28: "боевик", 12: "приключения", 16: "мультфильм", 35: "комедия", 80: "криминал", 99: "документальный", 18: "драма", 
+            10751: "семейный", 14: "фэнтези", 36: "история", 27: "ужасы", 10402: "музыка", 9648: "детектив", 10749: "мелодрама", 
+            878: "фантастика", 10770: "телевизионный фильм", 53: "триллер", 10752: "военный", 37: "вестерн", 10759:"Боевик и Приключения", 
+            10762:"Детский", 10763:"Новости", 10764:"Реалити-шоу", 10765:"НФ и Фэнтези", 10766:"Мыльная опера", 10767:"Ток-шоу", 10768:"Война и Политика"}
+
 headers = {
     "accept": "application/json",
     "Authorization": f"Bearer {os.getenv('API_KEY')}"
 }
+
+API_LINK = os.getenv('API_LINK')
+
 local_lang = "ru"
 
 def index(request):
-    random_genre = choice(list(__genres.items()))
     url_popular = f"https://api.themoviedb.org/3/movie/popular?language={
         local_lang}"
-    url_random = f"https://api.themoviedb.org/3/discover/movie?language={
-        local_lang}&page=1&sort_by=sort_by=vote_average.desc&with_genres={random_genre[0]}"
     url_soon = f"https://api.themoviedb.org/3/movie/upcoming?language={
         local_lang}"
     popular = []
-    random_best = []
     soon = []
     for movie in requests.get(url_popular, headers=headers).json()["results"]:
         try:
             popular.append({"tmdb_id": movie["id"], "title": movie["title"], "poster_path": movie["poster_path"], "rating": movie["vote_average"]})
         except:
             popular.append({"tmdb_id": movie["id"], "title": movie["title"], "poster_path": movie["poster_path"], "rating": 0.0})
-    for movie in requests.get(url_random, headers=headers).json()["results"]:
-        try:
-            random_best.append({"tmdb_id": movie["id"], "title": movie["title"], "poster_path": movie["poster_path"], "rating": movie["vote_average"]})
-        except:
-            random_best.append({"tmdb_id": movie["id"], "title": movie["title"], "poster_path": movie["poster_path"], "rating": 0.0})
+            
         
     for movie in requests.get(url_soon, headers=headers).json()["results"]:
         try:
@@ -51,60 +48,115 @@ def index(request):
             soon.append({"tmdb_id": movie["id"], "title": movie["title"], "poster_path": movie["poster_path"], "rating": 0.0})
     return render(request, 'index.html', {
         "popular": popular,
-        "randoms": random_best,
-        "soon": soon,
-        "random_genre": random_genre[1]
+        "soon": soon
     })
-
 
 def results(request):
     query = request.GET.get('q')
-    prev_query = request.GET.get('prevq')
-    if query == "":
-        query = prev_query
+    media_type = request.GET.get('mediatype')
     page = int(request.GET.get('page'))
-    results = []
-    if query:
-        url_search = f"https://api.themoviedb.org/3/search/movie?&language={
+    
+    tmdb_results = []
+    user_results = []
+    
+    if not query:
+        return render(request, 'no_results.html', {"error": 2})
+    
+    if media_type != "users":
+        url_search = f"https://api.themoviedb.org/3/search/{media_type}?&language={
             local_lang}&query={query}&page={page}"
         data = requests.get(url_search, headers=headers).json()
         for movie in data["results"]:
-            try:
-                results.append({"tmdb_id": movie["id"], "title": movie["title"], "poster_path": movie["poster_path"], "rating": movie["vote_average"]})
-            except:
-                results.append({"tmdb_id": movie["id"], "title": movie["title"], "poster_path": movie["poster_path"], "rating": 0.0})
-        if len(results) < 1:
-            return render(request, 'no_results.html', {"error": 1})
-    else:
-        return render(request, 'no_results.html', {"error": 2})
-    total_results = data["total_results"]
-    total_pages = data["total_pages"]
-    pages = [page_num for page_num in range(
-        max(1, page-3), min(page+3, int(total_pages))+1)]
+            tmdb_results.append({"tmdb_id": movie["id"], 
+                            "title": f"{movie["title"] if media_type == "movie" else movie["name"]}", 
+                            "poster_path": movie["poster_path"], 
+                            "rating": movie["vote_average"] if movie["vote_average"] else 0.0, 
+                            "is_Series": not media_type == "movie",
+                            "type": "media"})
+        total_results = data["total_results"]
+        total_pages = data["total_pages"]
+        pages = [page_num for page_num in range(
+            max(1, page-3), min(page+3, int(total_pages))+1)]
+    
+    if len(query) >= 2:
+        url_search = f"{API_LINK}profiles/search/?q={query}"
+        user_results = requests.get(url_search).json()
+    
+    if not tmdb_results and not user_results:
+        return render(request, 'no_results.html', {"error": 1})
+        
+    
+    if media_type != "users":
+        return render(request, 'results.html', {
+            "query": query,
+            "results": tmdb_results,
+            "genres":__genres,
+            "req": request,
+            "pages": pages,
+            "cur_page": page,
+            "total_pages": total_pages,
+            "total_results": total_results,
+            "mediatype": media_type
+        })
     return render(request, 'results.html', {
-        "results": results,
-        "pages": pages,
-        "cur_page": page,
-        "total_pages": total_pages,
-        "total_results": total_results,
-        "query": query
-    })
+            "query": query,
+            "results":  user_results,
+            "req": request,
+            "mediatype": media_type
+        })
+    
+    
 
-def movie(request, id):
+def get_info(mediatype, id, request):
     # retrieving info from tmdb  api
-    url_movie = f"https://api.themoviedb.org/3/movie/{
-        id}?language={local_lang}&append_to_response=recommendations,credits"
+    url_movie = f"https://api.themoviedb.org/3/{mediatype}/{id}?language={local_lang}&append_to_response=recommendations,credits"
     movie_details = requests.get(url_movie, headers=headers).json()
     # saving movie to a db if it doesnt exist
-    movie = Movie(
-            tmdb_id=movie_details["id"],
-            title=movie_details["title"],
-            rating=movie_details["vote_average"],
-            genre_ids=movie_details["genres"],
-            runtime=movie_details["runtime"],
-            release_date=movie_details["release_date"],
-            poster_path=movie_details["poster_path"],)
-    movie.save()
+    genres = ", ".join([i["name"] for i in movie_details["genres"]])
+    genres_list = ",".join([str(i["id"]) for i in movie_details["genres"]])
+    
+    is_movie = mediatype == "movie"
+    title_key = "title" if is_movie else "name"
+    date_key = "release_date" if is_movie else "first_air_date"
+
+    episode_runtime = movie_details.get("episode_run_time", [])
+    average_runtime = (
+        sum(episode_runtime) / len(episode_runtime) 
+        if episode_runtime 
+        else 40 
+    )
+    
+    episode_count = 1 if is_movie else movie_details["number_of_episodes"]
+    
+    movie, created = Movie.objects.get_or_create(
+        tmdb_id=movie_details["id"],
+        is_Series=not is_movie,
+        defaults={
+            'title': movie_details[title_key],
+            'rating': movie_details["vote_average"],
+            'genre_ids': genres_list,
+            'runtime': movie_details["runtime"] if is_movie else average_runtime,
+            'release_date': movie_details[date_key],
+            'poster_path': movie_details["poster_path"],
+            'episode_count': episode_count
+        }
+    )
+
+    if not created:
+        update_fields = []
+        if movie.rating != movie_details["vote_average"]:
+            movie.rating = movie_details["vote_average"]
+            update_fields.append('rating')
+        if movie.release_date != movie_details[date_key]:
+            movie.release_date = movie_details[date_key]
+            update_fields.append('release_date')
+        if movie.episode_count != episode_count:
+            movie.episode_count = episode_count
+            update_fields.append('episode_count')
+        if update_fields:
+            movie.save(update_fields=update_fields)
+        
+    movie_details["is_Series"] = not is_movie
     
     # retrieving info from db watched/liked
     is_watched = False
@@ -114,28 +166,21 @@ def movie(request, id):
         is_liked = movie.users_like.contains(request.user)
     # formatting info from api
     credits_data = movie_details["credits"]
-    movie_cast = credits_data["cast"][0:8]
-    producer = None
-    director = None
-    for person in credits_data["crew"]:
-        if person["job"] == "Producer" and producer is None:
-            producer = person
-        elif person["job"] == "Director" and director is None:
-            director = person
+    movie_cast = credits_data["cast"][:5]
     movie_recs = []
-    for movie in movie_details["recommendations"]["results"][:5]:
-        try:
-            movie_recs.append({"tmdb_id": movie["id"], "title": movie["title"], "poster_path": movie["poster_path"], "rating": movie["vote_average"]})
-        except:
-            movie_recs.append({"tmdb_id": movie["id"], "title": movie["title"], "poster_path": movie["poster_path"], "rating": 0.0})
+    for rec_movie in movie_details["recommendations"]["results"][:5]:
+        movie_recs.append({"tmdb_id": rec_movie["id"], "title": rec_movie[title_key], "release_date": rec_movie[date_key]})
 
-    genres = ", ".join([i["name"] for i in movie_details["genres"]])
+    
     return render(request, 'movie.html', {
         "movie": movie_details,
+        "id": movie.id,
+        "episodes": episode_count,
+        "title":movie_details[title_key],
+        "release_date":movie_details[date_key],
+        "runtime":movie_details["runtime"] if is_movie else average_runtime,
         "genres": genres,
         "cast": movie_cast,
-        "director": director,
-        "producer": producer,
         "recs": movie_recs,
         "credits": credits_data,
         "is_watched": is_watched,
@@ -143,12 +188,20 @@ def movie(request, id):
         "max_date": datetime.strftime(datetime.today(), "%Y-%m-%d")
     })
 
+def tv(request, id):
+    return get_info("tv", id, request)
+
+def movie(request, id):
+    return get_info("movie", id, request)
+    
 from django.contrib.auth.decorators import login_required
 @login_required
 def addtofav(request):
     try:
         movie_id = request.POST.get('id')
+        print(movie_id)
         movie = Movie.objects.get(pk=int(movie_id))
+        print(movie)
         if movie.users_like.contains(request.user):
             movie.users_like.remove(request.user)
         else:
@@ -156,7 +209,8 @@ def addtofav(request):
             if not movie.users_watched.contains(request.user):
                 movie.users_watched.add(request.user)
         return JsonResponse({'status': 'ok'})
-    except:
+    except Exception as e: 
+        print(e)
         return JsonResponse({'status': 'error'})
 
 @login_required
@@ -170,7 +224,8 @@ def addtowatched(request):
         else:
             movie.users_watched.add(request.user)
         return JsonResponse({'status': 'ok'})
-    except:
+    except Exception as e: 
+        print(e)
         return JsonResponse({'status': 'error'})
     
 
@@ -180,22 +235,19 @@ def addtojournal(request, id):
         pk=int(id)), watched_at=request.POST.get('date')).save()
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-
-def profile(request):
-    watched = Movie.objects.filter(users_watched__in=[request.user])
-    liked = Movie.objects.filter(users_like__in=[request.user])
-    return render(request, 'profile.html', {"liked": liked, "watched": watched})
-
+def profile(request, id):
+    watched = Movie.objects.filter(users_watched=id).distinct()
+    liked = Movie.objects.filter(users_like=id) 
+    user_profile = Profile.objects.get(user=int(id))
+    return render(request, 'profile/new_profile.html', {"user_profile":user_profile,"liked": liked, "watched": watched})
 
 def watched(request):
     watched = Movie.objects.filter(users_watched__in=[request.user]).distinct()
     return render(request, 'profile/watched.html', {"watched": watched})
 
-
 def liked(request):
     liked = Movie.objects.filter(users_like__in=[request.user])
     return render(request, 'profile/liked.html', {"liked": liked})
-
 
 def journal(request):
     movies = WatchedMovie.objects.select_related('movie').filter(
@@ -206,10 +258,8 @@ def journal(request):
     for period in time:
         journal_bymonth[f"{period["month"]}.{period["year"]}"] = []
     for entry in movies:
-        journal_bymonth[f"{entry.watched_at.month}.{
-            entry.watched_at.year}"].append(entry)
+        journal_bymonth[f"{entry.watched_at.month}.{entry.watched_at.year}"].append(entry)
     return render(request, 'profile/journal.html', {"journal": journal_bymonth})
-
 
 def get_timespan(start: datetime, end: datetime, timespan: str):
     if timespan == "month" or timespan == "halfyear":
@@ -218,92 +268,53 @@ def get_timespan(start: datetime, end: datetime, timespan: str):
         result = f"{start.strftime("%m.%y")}-{end.strftime("%m.%y")}"
     return result
 
-from colour import Color
-def stats(request, timespan):
-    # Getting the watched info from db
-    end = datetime.today()
-    if timespan == "month":
-        results = WatchedMovie.objects.filter(watched_at__gte=(
-            end - timedelta(weeks=4)), user=request.user)
-        start = end - timedelta(weeks=4)
-    elif timespan == "halfyear":
-        results = WatchedMovie.objects.filter(watched_at__gte=(
-            end - timedelta(weeks=26)), user=request.user)
-        start = end - timedelta(weeks=26)
-    elif timespan == "year":
-        results = WatchedMovie.objects.filter(watched_at__gte=(
-            end - timedelta(days=365)), user=request.user)
-        start = end - timedelta(days=365)
-    else:
-        results = WatchedMovie.objects.filter(
-            user=request.user, watched_at__isnull=False)
-        date = WatchedMovie.objects.filter(user=request.user, watched_at__isnull=False).aggregate(
-            Min("watched_at"))['watched_at__min']
-        try:
-            start = datetime.combine(date, time())
-        except:
-            start = datetime.today()
-    if len(results) <1:
-        return render(request, 'profile/stats.html', {"message": "Нет"})
-    # calculating the watchtime stats
-    step = (end - start) / 12
-    timestamps = [datetime.date(start + i*step) for i in range(12)]
-    timestamps.append(end.date())
-    watchtime_labels = []
-    watchtime_count = []
+from io import BytesIO
+import base64
+from collections import Counter
+from wordcloud import WordCloud
+from django.shortcuts import render
 
-    for i in range(1, 13):
-        time_start = timestamps[i-1]
-        time_end = timestamps[i]
-        watchtime_labels.append(get_timespan(time_start, time_end, timespan))
-        watchtime_count.append(WatchedMovie.objects.filter(watched_at__gte=time_start, watched_at__lte=time_end,
-                                                           user=request.user).aggregate(Sum("movie__runtime"))['movie__runtime__sum'])
-
-    # removing none from results
-    for i in range(len(watchtime_count)):
-        watchtime_count[i] = watchtime_count[i] if watchtime_count[i] else 0
-
-    # creating the timewatch barchart
-    bar_fig, bar_ax = plt.subplots()
-    bar_ax.bar(watchtime_labels, watchtime_count, color="#655a7c")
-    plt.xticks(rotation=20)
-    bar_ax.grid( color ='grey',
-        linestyle ='-.', linewidth = 0.5,
-        alpha = 0.2)
-    bar_ax.set_facecolor("#00000000")
-    bar_fig.set_facecolor("#00000000")
-
-    # calculating the genres stats
-    genres_all = ""
-    genres_labels = {}
-    for entry in results:
-        genres_all += entry.movie.genre_ids
-    for value in __genres.values():
-        if genres_all.count(value) != 0:
-            genres_labels[value] = genres_all.count(value)
-
-    # creating the piechart     
-    pie_fig, pie_ax = plt.subplots()
-    pie_ax.pie(genres_labels.values(), labels=genres_labels.keys(), colors=[str(col) for col in list(Color("#3b2f55").range_to(Color("#c6b3ef"),len(genres_labels)))])
-    pie_fig.set_facecolor("#00000000")
+def stats(request, id):
+    timespan = request.GET.get("timespan")
+    url_search = f"{API_LINK}user/{id}/stats/?timespan={timespan}"
+    results = requests.get(url_search).json()
     
-    imgdata = StringIO()
-    bar_fig.savefig(imgdata, format='svg')
-    imgdata.seek(0)
-    bar_graph = imgdata.getvalue()
-
-    imgdata = StringIO()
-    pie_fig.savefig(imgdata, format='svg')
-    imgdata.seek(0)
-    pie_graph = imgdata.getvalue()
+    # ids = [int(l) for l in results["genre_counts"].split(',') if l.strip()]
+    # genre_counter = Counter(ids)
+    # word_freq = {__genres[gid]: count for gid, count in genre_counter.items() if gid in __genres}
+    
+    # def red_color_func(word, font_size, position, orientation, random_state=None, **kwargs):
+    #     base_color = mcolors.hex2color('#A5231D')
+    #     variation = np.random.uniform(0.7, 1.3, 3) 
+    #     return tuple(np.clip(base_color * variation, 0, 1)) 
+    
+    # # Генерируем облако в памяти
+    # wordcloud = WordCloud(
+    #     width=800,
+    #     height=400,
+    #     mode="RGBA",
+    #     background_color=None,
+    #     font_path=os.path.join(settings.STATIC_ROOT, 'fonts/RobotoFlex.ttf'),  # Важно: нужен шрифт с поддержкой кириллицы!
+    #     color_func=lambda *args, **kwargs: (255,0,0),
+    #     prefer_horizontal=0.8,
+    #     collocations=False
+    # ).generate_from_frequencies(word_freq)
+    
+    # # Конвертируем в base64 для вставки в HTML
+    # img_buffer = BytesIO()
+    # wordcloud.to_image().save(img_buffer, format='PNG')
+    # img_str = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
 
     return render(request, 'profile/stats.html', {
-        "total_time": results.aggregate(Sum("movie__runtime"))['movie__runtime__sum'],
-        "total_count": results.aggregate(Count("movie"))['movie__count'],
-        "total_genres": len(genres_labels),
-        "bar_graph": bar_graph,
-        "piechart": pie_graph,
-        "stats": genres_labels,
+        "stats": results,
+        "timespan":timespan,
+        # 'wordcloud_image': img_str,
+        # "total_time": results.aggregate(Sum("movie__runtime"))['movie__runtime__sum'],
+        # "total_count": results.aggregate(Count("movie"))['movie__count'],
+        # "total_genres": len(genres_labels),
+        # "bar_graph": bar_graph,
+        # "piechart": pie_graph,
+        # "stats": genres_labels,
     })
 
 def registration(request):
@@ -311,6 +322,7 @@ def registration(request):
         user_form = SignUpForm(request.POST)
         if user_form.is_valid():
             new_user = user_form.save()
+            Profile.objects.create(user=new_user)
             return redirect('/', {"new_user": new_user})
     else:
         user_form = SignUpForm()
@@ -326,14 +338,17 @@ from .forms import UserEditForm
 def edituserinfo(request):
     if request.method == 'POST':
         user_form = UserEditForm(instance=request.user, data=request.POST)
-        if user_form.is_valid():
+        profile_form = ProfileEditForm(instance=request.user.profile, data=request.POST, files=request.FILES )
+        if user_form.is_valid() and profile_form.is_valid():
             user = user_form.save()
+            profile_form.save()
             update_session_auth_hash(request, user) 
-            return redirect('/')
+            return redirect(f'/movieapp/profile/{request.user.id}')
     else:
         user_form = UserEditForm(instance=request.user)
-    return render(request, 'registration/profile_change.html', {'user_form': user_form})
- 
+        profile_form = ProfileEditForm(instance=request.user.profile)
+    return render(request, 'registration/profile_change.html', {'user_form': user_form, 'profile_form': profile_form})
+
 @login_required
 def edituserpass(request):
     if request.method == 'POST':
@@ -341,7 +356,7 @@ def edituserpass(request):
         if pass_form.is_valid():
             user = pass_form.save()
             update_session_auth_hash(request, user)
-            return redirect('/')
+            return redirect(f'/movieapp/profile/{request.user.id}')
     else:
         pass_form = PasswordChangeForm(request.user)
     return render(request, 'registration/password_change.html', {'pass_form': pass_form})

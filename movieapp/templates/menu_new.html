@@ -4,9 +4,11 @@
       <a title="Главная" class="menu btn btn-primary" href="/movieapp">
         <i class="bi bi-house-fill"></i>
       </a>
+      <i class="bi bi-moon-stars"></i>
+      <i class="bi bi-sun"></i>
       <div class="nav-item">
         {% if user.is_authenticated %}
-        <a title="Профиль" class="nav-item menu btn btn-primary" href="{% url 'watched' %}">
+        <a title="Профиль" class="nav-item menu btn btn-primary" href="{% url 'profile' user.id%}">
           <i class="bi bi-person-fill"></i>
         </a>
         {% else %}
@@ -32,9 +34,14 @@
       </span>
         
         <input name="q" class="form-control col-11" type="search" aria-label="Search" placeholder="Запрос" {% if query %}value="{{query}}" {%endif%} />
+        <select name="mediatype" class="form-select" id="inputGroupSelect01">
+          <option {% if mediatype == "movie" %}selected{% endif %}  value="movie">Фильм</option>
+          <option {% if mediatype == "tv" %}selected{% endif %}  value="tv">Сериал</option>
+          <option {% if mediatype == "users" %}selected{% endif %}  value="users">Пользователи</option>
+        </select> 
       </div>
       <button name="page" value="1" class="btn" type="submit" hidden></button>
-      <input name="prevq" class="form-control" type="search" aria-label="Search" placeholder="Запрос" {% if query %}value="{{query}}" {%endif%} hidden />
+      
     </form>
   </div>
 </nav>
